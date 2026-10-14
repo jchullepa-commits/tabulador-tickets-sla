@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset=""UTF-8>
+    <title>Fichas de Registro</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4;}
+        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0,.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+        th {background-color: #eee; }
+        input, button { padding: 8px; margin: 5px; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>Registro - Cumplimiento de atencion de incidencias</h2>
+        <form id="formSLA">
+            <input type="text" id="dia" placeholder="Dia (Ej: Dia 1)" required>
+            <input type="number" id="resueltas" placeholder="Resueltas dentro del SLA" required>
+            <input type="number" id="total" placeholder="Total de incidencias" required>
+            <button type="submit">Guardar Registro</button>
+        </form>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Dia</th>
+                    <th>Incidencias resueltas (SLA)</th>
+                    <th>Total incidencias</th>
+                    <th>Porcentaje Cumplimiento (%)</th>
+                </tr>
+            </thead>
+            <tbody id="tablaSLA"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_SLA = 'http://localhost:8000/api/sla';
+
+        async function cargarSLA() {
+            const res = await fetch(API_SLA);
+            const data = await res.json();
+            const tbody = document.getElementById('tablaSLA');
+            tbody.innerHTML = '';
+            data.forEach(d => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${d.dia}</td>
+                        <td>${d.resueltas_sla}</td>
+                        <td>${d.total_incidencias}</td>
+                        <td>${d.porcentaje}%</td>
+                    </tr>`;
+            });
+        }
+
+        document.getElementById('formSLA').addEventListener('submit', async (e) =>{
+            e.preventDefault();
+            const payload = {
+                dia: document.getElementById('dia').value,
+                resueltas_sla: parseInt(document.getElementById('resueltas').value),
+                total_incidencias: parseInt(document.getElementById('total').value)
+            };
+            await fetch(API_SLA, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            document.getElementById('formSLA').reset();
+            cargarSLA();
+        });
+
+        cargarSLA();
+    </script>
+</body>
+</html>

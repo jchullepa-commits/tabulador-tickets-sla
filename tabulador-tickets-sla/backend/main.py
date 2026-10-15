@@ -122,6 +122,6 @@ async def upload_excels(
             procentaje=porcentaje
         ))
 
-    return {"message": {"Procesamiento y tabulacion completada exitosamente"}}
+    return {"message": "Procesamiento y tabulacion completada exitosamente"}
 
     

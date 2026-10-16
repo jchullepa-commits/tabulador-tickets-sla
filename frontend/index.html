@@ -13,67 +13,116 @@
         th {background-color: #f1f1f1; }
         buttom { background-color: #28a745; color: white; border: none; padding: 10px 20 px; font-weight: bold; cursor: pointer; border-radius: 4px;}
         button:hover { background-color: #218838;}
-        
+        .status { margin-top: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>Registro - Cumplimiento de atencion de incidencias</h2>
-        <form id="formSLA">
-            <input type="text" id="dia" placeholder="Dia (Ej: Dia 1)" required>
-            <input type="number" id="resueltas" placeholder="Resueltas dentro del SLA" required>
-            <input type="number" id="total" placeholder="Total de incidencias" required>
-            <button type="submit">Guardar Registro</button>
-        </form>
+    <!-- Panel de Carga de Archivos -->
+    <div class="card upload-section">
+        <h2>Cargar Datos de Registro</h2>
+        <div class="file-inputs">
+            <div>
+                <label><b>1. Archivo de Tickets (.xls):</b></label><br>
+                <input type="file" id="ticketsFile" accept=".xls,.xlsx">
+            </div>
+        </div>
+        <button onclick="procesarArchivos()">Cargar y Tabular Fichas</button>
+        <div id="uploadStatus" class="status"></div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Dia</th>
-                    <th>Incidencias resueltas (SLA)</th>
-                    <th>Total incidencias</th>
-                    <th>Porcentaje Cumplimiento (%)</th>
-                </tr>
-            </thead>
-            <tbody id="tablaSLA"></tbody>
-        </table>
+        <!-- Ficha 1-->
+        <div class="card">
+            <h3>Ficha de Registro - Tiempo promedio de resolucion</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item / Codigo</th>
+                        <th>Fecha de apertura de ticket</th>
+                        <th>Fecha de cierre de ticket</th>
+                        <th>Tiempo de cierre (Horas)</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaTiempo"></tbody>
+            </table>
+        </div>
+        <!-- Ficha 2-->
+        <div class="card">
+            <h3>Ficha de Registro - Numero de incidencias resueltas</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Dias</th>
+                        <th>Incidencias resueltas</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaIncidencias"></tbody>
+            </table>
+         </div>
+
+        <!-- Ficha 3 -->
+        <div class="card">
+            <h3>Ficha de Registro - Cumplimiento de atencion de incidencias</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Dias</th>
+                        <th>Incidencias resueltas dentro del SLA</th>
+                        <th>Total de incidencias</th>
+                        <th>Porcentaje de cumplimiento (%)</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaSla"></tbody>
+            </table>
+        </div>
+
     </div>
 
     <script>
-        const API_SLA = 'http://localhost:8000/api/sla';
+        const API_URL = 'http://localhost:8000/api';
 
-        async function cargarSLA() {
-            const res = await fetch(API_SLA);
-            const data = await res.json();
-            const tbody = document.getElementById('tablaSLA');
-            tbody.innerHTML = '';
-            data.forEach(d => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${d.dia}</td>
-                        <td>${d.resueltas_sla}</td>
-                        <td>${d.total_incidencias}</td>
-                        <td>${d.porcentaje}%</td>
-                    </tr>`;
-            });
+        async function cargarTablas() {
+            //Cargar ficha 1
+            const resT = await fetch(`${API_URL}/tiempo`);
+            const dataT = await resT.json();
+            const tbodyT = document.getElementById('tablaTiempo');
+            tbodyT.innerHTML = dataT.map(d => `
+                <tr>
+                    <td>${d.codigo}</td>
+                    <td>${d.fecha_apertura}</td>
+                    <td>${d.fecha_cierre}</td>
+                    <td>${d.tiempo_cierre} hrs</td>
+                </tr>
+            `).join('');
+
+            // Cargar Ficha 2
+            const resI = await fetch(`${API_URL}/incidencias`);
+            const dataI = await resI.json();
+            const tbodyI = document-getEelementById('tablaIncidencias');
+            tbodyI.innerHTML = dataI.map(d => `
+                <tr>
+                    <td>${d.dia}</td>
+                    <td>${d.incidencias_resueltas}</td>
+                </tr>
+            `).join('');
+            
+            //Cargar ficha 3
+            const resS = await fetch(`${API_URL}/sla`);
+            const dataS = await resS.json();
+            const tbodyS = document.getElementById('tablaSLA');
+            tbodyS.innerHTML = dataS.map(d =>`
+                <tr>
+                    <td>${d.dia}</td>
+                    <td>${d.resueltas_sla}</td>
+                    <td>${d.total_incidencias}</td>
+                    <td><bd>${d.porcentaje}%</b></td>
+                </tr>
+            `).join('');
         }
 
-        document.getElementById('formSLA').addEventListener('submit', async (e) =>{
-            e.preventDefault();
-            const payload = {
-                dia: document.getElementById('dia').value,
-                resueltas_sla: parseInt(document.getElementById('resueltas').value),
-                total_incidencias: parseInt(document.getElementById('total').value)
-            };
-            await fetch(API_SLA, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
-            });
-            document.getElementById('formSLA').reset();
-            cargarSLA();
-        });
+        async function procesarArchivos(){
+           const ticketsInput = document.getElementById('ticketsFile');
+            
+        }
 
         cargarSLA();
     </script>
